@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MoodDapp</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        div {
+            background-color: blueviolet;
+            width: 25%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            border: 5px solid;
+        }
+
+        button {
+            border: none;
+            width: 150%;
+            margin: 20px 0px 5px 0px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>This DAPP is meant to get your mood and store it on the blockchain</h1>
+        <p>Here we are going to set up some mood</p>
+        <label for="mood"></label>
+        <input type="text" name="" id="mood" placeholder="input mood here" />
+        <div class="moda">
+            <button onclick="setMood()">set Mood</button>
+        </div>
+        <div>
+            <button onclick="getMood()">get Mood</button>
+        </div>
+
+    </div>
+
+    <!-- ether.js is a library for interacting with the Ethereum Blockchain and its ecosystem.  -->
+
+    <!-- importing ether.js source -------------------------->
+
+    <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script>
+
+    <!-- another script for writing our code-------------- -->
+
+    <script>
+        // window.ethereum.enable() is looking at the window , this is injected web3, it is goona detect if i have a wallet or metamask installed in browser, remix also doing  this, it just check is your browser have wallet
+
+        window.ethereum.enable();
+
+        // .web3Provider(), i can use because of src in above script tag
+
+        var provider = new ethers.providers.Web3Provider(
+            window.ethereum,
+            "goerli"
+        );
+        console.log(provider);
+
+        /* it return an object
+  Web3Provider {_
+    isProvider: true,
+     _events: Array(0),
+      _emitted: {…}, formatter: 
+      Formatter, 
+      anyNetwork: false, …}
+        */
+
+
+        // we made four variables ---------------------------------
+        /*
+        value of MoodContractAddress = we get from our smart contract
+        value of MoodContractABI     = we get from our smart contract
+        value of MoodContract        = we find below
+        value of signer              = we find below
+        */
+
+        var MoodContractAddress = "0x7bd09806f1FA6401AD03ffc4F12b4B874be5b8EF";
+        var MoodContractABI = [
+            {
+                inputs: [
+                    {
+                        internalType: "string",
+                        name: "_mood",
+                        type: "string",
+                    },
+                ],
+                name: "setMood",
+                outputs: [],
+                stateMutability: "nonpayable",
+                type: "function",
+            },
+            {
+                inputs: [],
+                name: "getMood",
+                outputs: [
+                    {
+                        internalType: "string",
+                        name: "",
+                        type: "string",
+                    },
+                ],
+                stateMutability: "view",
+                type: "function",
+            },
+        ];
+        var MoodContract;
+        var signer;
+
+        provider
+            .send("eth_requestAccounts", [])
+
+            // console.log(provider.send("eth_requestAccounts", []))
+            // it return promise
+
+            .then(() => {
+                provider
+                    .listAccounts()
+
+                    // console.log(provider.listAccounts() )
+                    // it return promise pending
+
+                    .then((accounts) => {
+                        console.log(accounts);
+
+                        // it return my account ['0x5723572d0Dae9DF5575565203cF979eF087052dc']
+
+                        signer = provider.getSigner(accounts[0]);
+
+
+
+                        MoodContract = new ethers.Contract(
+                            MoodContractAddress,
+                            MoodContractABI,
+                            signer
+                        );
+                        console.log(MoodContract);
+
+                        /* it return an object
+          Contract {
+            interface: Interface, 
+            provider: Web3Provider, 
+            signer: JsonRpcSigner, 
+            callStatic: {…}, 
+            estimateGas: {…}, …}
+                    */
+                    });
+            });
+
+        // i have to make these two function asynchronus because it will not stop other executions
+
+        async function getMood() {
+            let getMoodPromise = MoodContract.getMood();
+            // getMood is a method inside MoodContract object
+            console.log(getMoodPromise);
+            var Mood = await getMoodPromise;
+            console.log(Mood);
+        }
+        async function setMood() {
+            let mood = document.getElementById("mood").value;
+            setMoodPromise = MoodContract.setMood(mood);
+            // setMood is a method inside MoodContract object
+            console.log(setMoodPromise);
+            await setMoodPromise;
+        }
+    </script>
+</body>
+
+</html>
